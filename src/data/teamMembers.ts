@@ -7,6 +7,9 @@ export const TEAM_MEMBERS_BY_ID: string[][] = [
   ['이지우', '김규빈', '황다희', '최정인', '조환희', '유승훈', '신정은'],
 ]
 
+/** 운영진 명단 (황금열쇠 등) */
+export const STAFF_MEMBERS = ['이채은', '김민성', '김상지', '김보아', '이지우']
+
 export function getTeamMembers(teamId: number): string[] {
   return TEAM_MEMBERS_BY_ID[teamId] ?? []
 }

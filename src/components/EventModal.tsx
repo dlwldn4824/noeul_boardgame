@@ -50,10 +50,11 @@ export function EventModal({ modal, teams, currentTeamId }: EventModalProps) {
   const showScoreSelector = modal.requiresScoreAward && isSelectingWinner
 
   if (modal.spectacularReveal?.kind === 'chairman-meal') {
-    const currentTeam = teams.find((team) => team.id === currentTeamId)
     return (
       <SpectacularGoldKeyModal
-        teamName={currentTeam?.name ?? '걸린 팀'}
+        teamName={modal.spectacularReveal.teamName}
+        members={modal.spectacularReveal.members}
+        pickedMember={modal.spectacularReveal.pickedMember}
         onComplete={modal.spectacularReveal.onComplete}
       />
     )
@@ -101,6 +102,10 @@ export function EventModal({ modal, teams, currentTeamId }: EventModalProps) {
               className="secondary-button love-shot-reroll-button"
               disabled={isRolling}
               onClick={() => {
+                if (modal.memberPick?.onReroll) {
+                  modal.memberPick.onReroll()
+                  return
+                }
                 setPickedMember(
                   pickRandomTeamMember(modal.memberPick!.members, pickedMember),
                 )

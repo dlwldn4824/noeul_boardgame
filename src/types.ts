@@ -54,11 +54,16 @@ export interface ModalState {
     initialMember: string
     /** 있으면 확인 후 2단계 팝업, 없으면 확인 즉시 완료 */
     finalMessage?: string
+    /** 있으면 '이 자리에 없어요' 시 멤버 재추첨 대신 이 콜백 실행 */
+    onReroll?: () => void
     onComplete: () => void | Promise<void>
   }
   /** 황금열쇠 대박 연출 (게임당 1회) */
   spectacularReveal?: {
     kind: 'chairman-meal'
+    teamName: string
+    members: string[]
+    pickedMember: string
     onComplete: () => void | Promise<void>
   }
   onConfirm: (targetTeamId?: number) => void | Promise<void>

@@ -16,7 +16,7 @@ import {
   SHORTCUT_START,
   SHOW_CELL_GUIDES,
 } from './data/board'
-import { getTeamMembers, pickRandomTeamMember } from './data/teamMembers'
+import { getTeamMembers, pickRandomTeamMember, STAFF_MEMBERS } from './data/teamMembers'
 import type { ModalState, Team } from './types'
 
 const TEAM_COLORS = ['#ff6b6b', '#4dabf7', '#51cf66', '#ffd43b', '#9775fa']
@@ -156,7 +156,7 @@ function App() {
     setIsRolling(false)
 
     const nextPosition = await moveTeam(team.id, finalRoll)
-    processArrival(team.id, nextPosition, finalRoll)
+    processArrival(team.id, nextPosition, finalRoll, false)
   }
 
   const processGoldKey = (teamId: number, currentTeam: Team) => {
@@ -166,6 +166,7 @@ function App() {
       'back',
       'score-plus-20',
       'target-minus-10',
+      'staff-drink',
     ] as const
 
     const availableEvents = chairmanMealUsedRef.current
@@ -176,11 +177,35 @@ function App() {
 
     if (goldKeyEvent === 'chairman-meal') {
       chairmanMealUsedRef.current = true
+      const members = getTeamMembers(teamId)
       setModal({
         title: '황금열쇠',
         message: '',
         spectacularReveal: {
           kind: 'chairman-meal',
+          teamName: currentTeam.name,
+          members,
+          pickedMember: pickRandomTeamMember(members),
+          onComplete: advanceTurn,
+        },
+        onConfirm: advanceTurn,
+      })
+      return
+    }
+
+    if (goldKeyEvent === 'staff-drink') {
+      setModal({
+        title: '황금열쇠',
+        message: '',
+        accent: '황금열쇠',
+        memberPick: {
+          accent: '황금열쇠',
+          title: '황금열쇠',
+          prompt: '운영진 중 랜덤으로 한잔해!',
+          teamName: currentTeam.name,
+          members: STAFF_MEMBERS,
+          initialMember: pickRandomTeamMember(STAFF_MEMBERS),
+          onReroll: () => processGoldKey(teamId, currentTeam),
           onComplete: advanceTurn,
         },
         onConfirm: advanceTurn,
@@ -212,7 +237,7 @@ function App() {
         onConfirm: async () => {
           setModal(null)
           const nextPosition = await moveTeam(teamId, forwardSteps)
-          processArrival(teamId, nextPosition)
+          processArrival(teamId, nextPosition, undefined, false)
         },
       })
       return
@@ -227,7 +252,7 @@ function App() {
         onConfirm: async () => {
           setModal(null)
           const nextPosition = await moveTeam(teamId, -backSteps)
-          processArrival(teamId, nextPosition)
+          processArrival(teamId, nextPosition, undefined, true)
         },
       })
       return
@@ -267,7 +292,12 @@ function App() {
     })
   }
 
-  const processArrival = (teamId: number, position: number, arrivalRoll?: number) => {
+  const processArrival = (
+    teamId: number,
+    position: number,
+    arrivalRoll?: number,
+    arrivedBackward = false,
+  ) => {
     const cell = BOARD_CELLS[position]
     const currentTeam = teamsRef.current.find((team) => team.id === teamId)
 
@@ -288,6 +318,21 @@ function App() {
         title: '한 바퀴 완주!',
         message: `${currentTeam.name}이(가) 한 바퀴를 돌았습니다!\n완주 보너스 +${LAP_SCORE}점이 지급되었습니다.`,
         accent: 'FINISH',
+        onConfirm: advanceTurn,
+      })
+      return
+    }
+
+    if (position === 11) {
+      updateTeams((previousTeams) =>
+        previousTeams.map((team) =>
+          team.id === teamId ? { ...team, score: team.score + 15 } : team,
+        ),
+      )
+      setModal({
+        title: '+15 도착',
+        message: '쉬어가는 턴도 있어야져~ 공짜 15점 나이스',
+        accent: '+15',
         onConfirm: advanceTurn,
       })
       return
@@ -334,6 +379,86 @@ function App() {
     }
 
     if (cell.type === 'oneshot') {
+      if (position === 1) {
+        updateTeams((previousTeams) =>
+          previousTeams.map((team) =>
+            team.id === teamId ? { ...team, score: team.score + 5 } : team,
+          ),
+        )
+        setModal({
+          title: '보컬 다같이 원샷 도착',
+          message: '우리팀 보컬들 !! 일어나서 원샷!\n+5점',
+          accent: '원샷',
+          onConfirm: advanceTurn,
+        })
+        return
+      }
+
+      if (position === 7) {
+        updateTeams((previousTeams) =>
+          previousTeams.map((team) =>
+            team.id === teamId ? { ...team, score: team.score + 5 } : team,
+          ),
+        )
+        setModal({
+          title: '드럼 원샷 도착',
+          message: '우리팀 드럼은 일어나서 원샷!\n+5점',
+          accent: '원샷',
+          onConfirm: advanceTurn,
+        })
+        return
+      }
+
+      if (position === 16) {
+        updateTeams((previousTeams) =>
+          previousTeams.map((team) =>
+            team.id === teamId ? { ...team, score: team.score + 5 } : team,
+          ),
+        )
+        setModal({
+          title: '베이스 원샷 도착',
+          message: '우리팀 베이스는 일어나서 원샷!\n+5점',
+          accent: '원샷',
+          onConfirm: advanceTurn,
+        })
+        return
+      }
+
+      if (position === 17) {
+        const members = getTeamMembers(teamId)
+        setModal({
+          title: '한명 지목 도착',
+          message: '',
+          accent: '지목',
+          memberPick: {
+            accent: '지목',
+            title: '한명 지목 도착',
+            prompt: '한명 지목! 너 마셔!',
+            teamName: currentTeam.name,
+            members,
+            initialMember: pickRandomTeamMember(members),
+            onComplete: advanceTurn,
+          },
+          onConfirm: advanceTurn,
+        })
+        return
+      }
+
+      if (position === 18) {
+        updateTeams((previousTeams) =>
+          previousTeams.map((team) =>
+            team.id === teamId ? { ...team, score: team.score + 5 } : team,
+          ),
+        )
+        setModal({
+          title: '키보드 원샷 도착',
+          message: '우리팀 키보드는 일어나서 원샷!!\n+5점',
+          accent: '원샷',
+          onConfirm: advanceTurn,
+        })
+        return
+      }
+
       if (position === 13) {
         const message =
           arrivalRoll !== undefined
@@ -352,17 +477,13 @@ function App() {
       }
 
       const message =
-        position === 1
-          ? '보컬은 모두 잔을 들고 건배~~'
-          : position === 8
-            ? '노을 전체 잔들어!! 원샷'
+        position === 8
+          ? '노을 전체 잔들어!! 원샷'
             : position === 10
               ? '걸린 조 빼고 다같이 원샷!!'
-              : position === 16
-                ? '베이스들은 다같이 잔을 들고 ~ 원샷~~'
-                : position === 21
-                  ? '우리 새내기들 일어나! 한잔해~~'
-                  : randomItem(oneshotEvents)
+              : position === 21
+                ? '우리 새내기들 일어나! 한잔해~~'
+                : randomItem(oneshotEvents)
 
       setModal({
         title: `${cell.name} 도착`,
@@ -398,6 +519,29 @@ function App() {
               )
               advanceTurn()
             },
+          },
+          onConfirm: advanceTurn,
+        })
+        return
+      }
+
+      if (position === 26) {
+        setModal({
+          title: '랜덤 게임 도착',
+          message: '걸린 팀에서 자신있는게임으로 랜덤 게임!! 이기면 +10점!!',
+          accent: '미션',
+          missionResult: {
+            successLabel: '미션 성공',
+            failLabel: '미션 실패',
+            onSuccess: () => {
+              updateTeams((previousTeams) =>
+                previousTeams.map((team) =>
+                  team.id === teamId ? { ...team, score: team.score + 10 } : team,
+                ),
+              )
+              advanceTurn()
+            },
+            onFail: advanceTurn,
           },
           onConfirm: advanceTurn,
         })
@@ -449,6 +593,11 @@ function App() {
       }
 
       if (position === 2) {
+        if (arrivedBackward) {
+          advanceTurn()
+          return
+        }
+
         setModal({
           title: '미션 게임 도착',
           message: '각 조에서 2명씩 나와서 점수 10점 걸고 호빵,찐빵,대빵 게임!!',
@@ -480,9 +629,14 @@ function App() {
     }
 
     if (cell.type === 'guitar') {
+      updateTeams((previousTeams) =>
+        previousTeams.map((team) =>
+          team.id === teamId ? { ...team, score: team.score + 5 } : team,
+        ),
+      )
       setModal({
-        title: '기타 원샷 도착',
-        message: '기타 들은 ~~ 소주잔을 들고 다같이 건배!!',
+        title: '기타 다같이 원샷 도착',
+        message: '우리팀 기타들은 일어나서 다같이 원샷 !\n+5점',
         accent: '기타',
         onConfirm: advanceTurn,
       })
@@ -495,16 +649,6 @@ function App() {
           title: '팀끼리 원샷 도착',
           message: '사랑하는 만큼~ 조원끼리 다같이 원샷',
           accent: '원샷',
-          onConfirm: advanceTurn,
-        })
-        return
-      }
-
-      if (position === 7 || position === 17) {
-        setModal({
-          title: '운영진 쿠폰 도착',
-          message: '원하는 운영진 한잔 마시게 하기!!',
-          accent: '쿠폰',
           onConfirm: advanceTurn,
         })
         return
@@ -550,7 +694,7 @@ function App() {
         onConfirm: async () => {
           setModal(null)
           const nextPosition = await moveTeam(teamId, moveAmount)
-          processArrival(teamId, nextPosition)
+          processArrival(teamId, nextPosition, undefined, moveAmount < 0)
         },
       })
       return

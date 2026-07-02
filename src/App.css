@@ -654,10 +654,28 @@ button:disabled {
 }
 
 .jackpot-team {
-  margin: 0 0 16px;
+  margin: 0 0 8px;
   color: #862e00;
   font-size: 30px;
   font-weight: 900;
+}
+
+.jackpot-member {
+  margin: 0 0 16px;
+  color: #ff6b6b;
+  font-size: 52px;
+  font-weight: 950;
+  line-height: 1.2;
+  min-height: 1.2em;
+}
+
+.jackpot-member.rolling {
+  animation: name-roulette-pulse 0.12s ease-in-out infinite alternate;
+  opacity: 0.88;
+}
+
+.jackpot-member.revealed {
+  animation: name-roulette-reveal 0.45s ease-out;
 }
 
 .jackpot-main {
