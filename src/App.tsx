@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { Board } from './components/Board'
-import { DebugPanel } from './components/DebugPanel'
 import { Dice } from './components/Dice'
 import { EventModal } from './components/EventModal'
 import { ScoreBoard } from './components/ScoreBoard'
@@ -16,7 +15,6 @@ import {
   SHORTCUT_ENTER_FROM,
   SHORTCUT_START,
   SHOW_CELL_GUIDES,
-  SHOW_DEBUG_PANEL,
 } from './data/board'
 import { getTeamMembers, pickRandomTeamMember } from './data/teamMembers'
 import type { ModalState, Team } from './types'
@@ -63,8 +61,6 @@ function App() {
   const teamsRef = useRef<Team[]>([])
   const currentTeamIndexRef = useRef(0)
   const chairmanMealUsedRef = useRef(false)
-  const previewOnlyRef = useRef(false)
-  const [debugPreviewRoll, setDebugPreviewRoll] = useState(2)
 
   useEffect(() => {
     teamsRef.current = teams
@@ -75,30 +71,9 @@ function App() {
   }, [currentTeamIndex])
 
   const updateTeams = (updater: (previousTeams: Team[]) => Team[]) => {
-    if (previewOnlyRef.current) return
-
     const nextTeams = updater(teamsRef.current)
     teamsRef.current = nextTeams
     setTeams(nextTeams)
-  }
-
-  const closeModalOrAdvance = () => {
-    if (previewOnlyRef.current) {
-      previewOnlyRef.current = false
-      setModal(null)
-      return
-    }
-    advanceTurn()
-  }
-
-  const previewCell = (cellId: number) => {
-    if (modal || isRolling) return
-
-    const currentTeam = teamsRef.current[currentTeamIndexRef.current]
-    if (!currentTeam || !BOARD_CELLS[cellId]) return
-
-    previewOnlyRef.current = true
-    processArrival(currentTeam.id, cellId, debugPreviewRoll)
   }
 
   const startGame = (teamNames: string[]) => {
@@ -200,17 +175,15 @@ function App() {
     const goldKeyEvent = randomItem(availableEvents)
 
     if (goldKeyEvent === 'chairman-meal') {
-      if (!previewOnlyRef.current) {
-        chairmanMealUsedRef.current = true
-      }
+      chairmanMealUsedRef.current = true
       setModal({
         title: '황금열쇠',
         message: '',
         spectacularReveal: {
           kind: 'chairman-meal',
-          onComplete: closeModalOrAdvance,
+          onComplete: advanceTurn,
         },
-        onConfirm: closeModalOrAdvance,
+        onConfirm: advanceTurn,
       })
       return
     }
@@ -225,10 +198,6 @@ function App() {
       void (async () => {
         await delay(700)
         setModal(null)
-        if (previewOnlyRef.current) {
-          previewOnlyRef.current = false
-          return
-        }
         await executeDiceRoll(teamId)
       })()
       return
@@ -242,10 +211,6 @@ function App() {
         accent: '황금열쇠',
         onConfirm: async () => {
           setModal(null)
-          if (previewOnlyRef.current) {
-            previewOnlyRef.current = false
-            return
-          }
           const nextPosition = await moveTeam(teamId, forwardSteps)
           processArrival(teamId, nextPosition)
         },
@@ -261,10 +226,6 @@ function App() {
         accent: '황금열쇠',
         onConfirm: async () => {
           setModal(null)
-          if (previewOnlyRef.current) {
-            previewOnlyRef.current = false
-            return
-          }
           const nextPosition = await moveTeam(teamId, -backSteps)
           processArrival(teamId, nextPosition)
         },
@@ -282,7 +243,7 @@ function App() {
         title: '황금열쇠',
         message: `💯 ${currentTeam.name} 조 점수 +20점!`,
         accent: '+20',
-        onConfirm: closeModalOrAdvance,
+        onConfirm: advanceTurn,
       })
       return
     }
@@ -301,7 +262,7 @@ function App() {
             ),
           )
         }
-        closeModalOrAdvance()
+        advanceTurn()
       },
     })
   }
@@ -311,7 +272,7 @@ function App() {
     const currentTeam = teamsRef.current.find((team) => team.id === teamId)
 
     if (!currentTeam) {
-      closeModalOrAdvance()
+      advanceTurn()
       return
     }
 
@@ -327,7 +288,7 @@ function App() {
         title: '한 바퀴 완주!',
         message: `${currentTeam.name}이(가) 한 바퀴를 돌았습니다!\n완주 보너스 +${LAP_SCORE}점이 지급되었습니다.`,
         accent: 'FINISH',
-        onConfirm: closeModalOrAdvance,
+        onConfirm: advanceTurn,
       })
       return
     }
@@ -350,9 +311,9 @@ function App() {
           teamName: currentTeam.name,
           members,
           initialMember: pickRandomTeamMember(members),
-          onComplete: closeModalOrAdvance,
+          onComplete: advanceTurn,
         },
-        onConfirm: closeModalOrAdvance,
+        onConfirm: advanceTurn,
       })
       return
     }
@@ -363,12 +324,12 @@ function App() {
           title: `${cell.name} 도착`,
           message: `지름길엔 대가가 따르죠 조원끼리 ${cell.name} !!`,
           accent: '지름길',
-          onConfirm: closeModalOrAdvance,
+          onConfirm: advanceTurn,
         })
         return
       }
 
-      closeModalOrAdvance()
+      advanceTurn()
       return
     }
 
@@ -385,7 +346,7 @@ function App() {
           title: '짝수/홀수 도착',
           message,
           accent: '원샷',
-          onConfirm: closeModalOrAdvance,
+          onConfirm: advanceTurn,
         })
         return
       }
@@ -407,7 +368,7 @@ function App() {
         title: `${cell.name} 도착`,
         message,
         accent: '원샷',
-        onConfirm: closeModalOrAdvance,
+        onConfirm: advanceTurn,
       })
       return
     }
@@ -427,7 +388,7 @@ function App() {
                   team.id === teamId ? { ...team, score: team.score + 20 } : team,
                 ),
               )
-              closeModalOrAdvance()
+              advanceTurn()
             },
             onFail: () => {
               updateTeams((previousTeams) =>
@@ -435,10 +396,10 @@ function App() {
                   team.id === teamId ? { ...team, score: team.score - 10 } : team,
                 ),
               )
-              closeModalOrAdvance()
+              advanceTurn()
             },
           },
-          onConfirm: closeModalOrAdvance,
+          onConfirm: advanceTurn,
         })
         return
       }
@@ -459,7 +420,7 @@ function App() {
                 ),
               )
             }
-            closeModalOrAdvance()
+            advanceTurn()
           },
         })
         return
@@ -481,7 +442,7 @@ function App() {
                 ),
               )
             }
-            closeModalOrAdvance()
+            advanceTurn()
           },
         })
         return
@@ -503,7 +464,7 @@ function App() {
                 ),
               )
             }
-            closeModalOrAdvance()
+            advanceTurn()
           },
         })
         return
@@ -513,7 +474,7 @@ function App() {
         title: `${cell.name} 도착`,
         message: randomItem(gameEvents),
         accent: '미션',
-        onConfirm: closeModalOrAdvance,
+        onConfirm: advanceTurn,
       })
       return
     }
@@ -523,7 +484,7 @@ function App() {
         title: '기타 원샷 도착',
         message: '기타 들은 ~~ 소주잔을 들고 다같이 건배!!',
         accent: '기타',
-        onConfirm: closeModalOrAdvance,
+        onConfirm: advanceTurn,
       })
       return
     }
@@ -534,7 +495,7 @@ function App() {
           title: '팀끼리 원샷 도착',
           message: '사랑하는 만큼~ 조원끼리 다같이 원샷',
           accent: '원샷',
-          onConfirm: closeModalOrAdvance,
+          onConfirm: advanceTurn,
         })
         return
       }
@@ -544,7 +505,7 @@ function App() {
           title: '운영진 쿠폰 도착',
           message: '원하는 운영진 한잔 마시게 하기!!',
           accent: '쿠폰',
-          onConfirm: closeModalOrAdvance,
+          onConfirm: advanceTurn,
         })
         return
       }
@@ -553,7 +514,7 @@ function App() {
         title: '운영진 쿠폰 획득',
         message: `${currentTeam.name} 운영진 쿠폰을 획득했습니다.`,
         accent: '쿠폰',
-        onConfirm: closeModalOrAdvance,
+        onConfirm: advanceTurn,
       })
       return
     }
@@ -573,9 +534,9 @@ function App() {
             members,
             initialMember: pickRandomTeamMember(members),
             finalMessage: '다른 팀원도 OK 원하는 사람 골라서 러브샷!!',
-            onComplete: closeModalOrAdvance,
+            onComplete: advanceTurn,
           },
-          onConfirm: closeModalOrAdvance,
+          onConfirm: advanceTurn,
         })
         return
       }
@@ -588,10 +549,6 @@ function App() {
         accent: '이동',
         onConfirm: async () => {
           setModal(null)
-          if (previewOnlyRef.current) {
-            previewOnlyRef.current = false
-            return
-          }
           const nextPosition = await moveTeam(teamId, moveAmount)
           processArrival(teamId, nextPosition)
         },
@@ -604,7 +561,7 @@ function App() {
       return
     }
 
-    closeModalOrAdvance()
+    advanceTurn()
   }
 
   const rollDice = async () => {
@@ -637,14 +594,6 @@ function App() {
           <ScoreBoard teams={teams} currentTeamId={currentTeam?.id ?? 0} />
         </aside>
       </div>
-
-      {SHOW_DEBUG_PANEL && (
-        <DebugPanel
-          previewRoll={debugPreviewRoll}
-          onPreviewRollChange={setDebugPreviewRoll}
-          onPreviewCell={previewCell}
-        />
-      )}
 
       {modal && <EventModal modal={modal} teams={teams} currentTeamId={currentTeam?.id ?? 0} />}
     </main>

@@ -95,7 +95,4 @@ export function getPrevPosition(current: number, onShortcut: boolean): number {
 }
 
 /** 위치 맞출 때만 true로 바꾸면 칸 번호 가이드가 보입니다 */
-export const SHOW_CELL_GUIDES = true
-
-/** 디버그용 칸 팝업 프리뷰 패널 (실제 게임 배포 시 false) */
-export const SHOW_DEBUG_PANEL = true
+export const SHOW_CELL_GUIDES = false
