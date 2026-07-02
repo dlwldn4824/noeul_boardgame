@@ -3,6 +3,8 @@ import './App.css'
 import { Board } from './components/Board'
 import { Dice } from './components/Dice'
 import { EventModal } from './components/EventModal'
+import { ResultScreen } from './components/ResultScreen'
+import { RulesScreen } from './components/RulesScreen'
 import { ScoreBoard } from './components/ScoreBoard'
 import { StartScreen } from './components/StartScreen'
 import {
@@ -11,6 +13,7 @@ import {
   getMoveAmountFromCellName,
   getNextPosition,
   getPrevPosition,
+  LAP_COUNT_TO_WIN,
   LAP_SCORE,
   SHORTCUT_ENTER_FROM,
   SHORTCUT_START,
@@ -52,8 +55,9 @@ const GOLD_KEY_BACK_MIN = 1
 const GOLD_KEY_BACK_MAX = 2
 
 function App() {
-  const [screen, setScreen] = useState<'start' | 'game'>('start')
+  const [screen, setScreen] = useState<'rules' | 'start' | 'game' | 'result'>('rules')
   const [teams, setTeams] = useState<Team[]>([])
+  const [winnerName, setWinnerName] = useState('')
   const [currentTeamIndex, setCurrentTeamIndex] = useState(0)
   const [diceValue, setDiceValue] = useState<number | null>(null)
   const [isRolling, setIsRolling] = useState(false)
@@ -100,6 +104,7 @@ function App() {
       score: 0,
       position: 0,
       color: TEAM_COLORS[index],
+      laps: 0,
       onShortcut: false,
     }))
 
@@ -119,8 +124,9 @@ function App() {
     setDiceValue(null)
     setIsRolling(false)
     setModal(null)
+    setWinnerName('')
     chairmanMealUsedRef.current = false
-    setScreen('start')
+    setScreen('rules')
   }
 
   const advanceTurn = () => {
@@ -320,16 +326,38 @@ function App() {
     }
 
     if (cell.type === 'finish' || position === FINISH_CELL_INDEX) {
+      const nextLaps = currentTeam.laps + 1
       updateTeams((previousTeams) =>
         previousTeams.map((team) =>
           team.id === teamId
-            ? { ...team, score: team.score + LAP_SCORE, position: 0, onShortcut: false }
+            ? {
+                ...team,
+                score: team.score + LAP_SCORE,
+                laps: nextLaps,
+                position: 0,
+                onShortcut: false,
+              }
             : team,
         ),
       )
+
+      if (nextLaps >= LAP_COUNT_TO_WIN) {
+        setWinnerName(currentTeam.name)
+        setModal({
+          title: '게임 종료!',
+          message: `${currentTeam.name}이(가) 2바퀴를 먼저 완주했습니다!\n완주 보너스 +${LAP_SCORE}점`,
+          accent: 'FINISH',
+          onConfirm: () => {
+            setModal(null)
+            setScreen('result')
+          },
+        })
+        return
+      }
+
       setModal({
         title: '한 바퀴 완주!',
-        message: `${currentTeam.name}이(가) 한 바퀴를 돌았습니다!\n완주 보너스 +${LAP_SCORE}점이 지급되었습니다.`,
+        message: `${currentTeam.name}이(가) ${nextLaps}바퀴를 완주했습니다!\n완주 보너스 +${LAP_SCORE}점이 지급되었습니다.`,
         accent: 'FINISH',
         onConfirm: advanceTurn,
       })
@@ -758,8 +786,16 @@ function App() {
     await executeDiceRoll()
   }
 
+  if (screen === 'rules') {
+    return <RulesScreen onNext={() => setScreen('start')} />
+  }
+
   if (screen === 'start') {
     return <StartScreen onStart={startGame} />
+  }
+
+  if (screen === 'result') {
+    return <ResultScreen teams={teams} winnerName={winnerName} onRestart={resetGame} />
   }
 
   const currentTeam = teams[currentTeamIndex]

@@ -23,6 +23,8 @@ export interface Team {
   score: number
   position: number
   color: string
+  /** 완주한 바퀴 수 */
+  laps: number
   /** 5번 칸에 정확히 멈춰 지름길 경로로 진입한 상태 */
   onShortcut: boolean
 }

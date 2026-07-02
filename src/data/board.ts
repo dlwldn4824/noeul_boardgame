@@ -38,6 +38,7 @@ export const BOARD_CELLS: BoardCell[] = [
 export const LAST_CELL_INDEX = BOARD_CELLS.length - 1
 export const FINISH_CELL_INDEX = 30
 export const LAP_SCORE = 20
+export const LAP_COUNT_TO_WIN = 2
 
 /** 5번 칸에 정확히 멈추면 진입하는 지름길 칸 (첫 칸) */
 export const SHORTCUT_ENTER_FROM = 5

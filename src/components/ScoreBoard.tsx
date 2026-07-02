@@ -21,7 +21,7 @@ export function ScoreBoard({ teams, currentTeamId }: ScoreBoardProps) {
             <div className="score-rank">{index + 1}</div>
             <div>
               <strong>{team.name}</strong>
-              <span>{team.position}번 칸</span>
+              <span>{team.laps}바퀴 · {team.position}번 칸</span>
             </div>
             <b>{team.score}점</b>
           </article>

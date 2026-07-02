@@ -23,9 +23,7 @@ export function StartScreen({ onStart }: StartScreenProps) {
       <section className="start-card">
         <p className="eyebrow">MT / 동아리 행사 보드게임</p>
         <h1>NOEUL 주루마블</h1>
-        <p className="start-description">
-          최대 5개 팀명을 입력하고, 순서대로 주사위를 굴려 보드판을 이동하세요.
-        </p>
+        <p className="start-description">팀명을 입력하고 게임을 시작하세요.</p>
 
         <div className="team-inputs">
           {teamNames.map((teamName, index) => (

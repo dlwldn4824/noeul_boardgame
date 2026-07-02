@@ -81,6 +81,68 @@ button:disabled {
   line-height: 1.45;
 }
 
+.rules-card {
+  text-align: left;
+}
+
+.rules-card h1 {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.rules-list {
+  margin: 0 0 32px;
+  padding-left: 1.4em;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.rules-list li + li {
+  margin-top: 10px;
+}
+
+.rules-card .primary-button {
+  display: block;
+  width: 100%;
+}
+
+.result-card h1 {
+  font-size: 48px;
+}
+
+.result-score-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.result-score-item {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border: 3px solid #493a2c;
+  border-radius: 18px;
+  background: #fff;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.result-rank {
+  color: #868e96;
+  font-size: 18px;
+}
+
+.result-score-item strong {
+  text-align: left;
+}
+
+.result-card .primary-button {
+  width: 100%;
+}
+
 .team-inputs {
   display: grid;
   gap: 14px;
