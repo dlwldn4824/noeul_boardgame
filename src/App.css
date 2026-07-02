@@ -207,10 +207,31 @@ button:disabled {
 
 .game-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 16px;
   margin: 0 auto 20px;
   max-width: 1500px;
+}
+
+.dev-simulator-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.dev-simulator-button,
+.dev-simulator-stop {
+  font-size: 14px;
+  padding: 10px 16px;
+  border-color: #9775fa;
+  color: #5f3dc4;
+}
+
+.dev-simulator-stop {
+  border-color: #ff6b6b;
+  color: #c92a2a;
 }
 
 .game-layout {

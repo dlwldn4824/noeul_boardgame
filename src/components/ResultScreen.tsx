@@ -2,19 +2,30 @@ import type { Team } from '../types'
 
 interface ResultScreenProps {
   teams: Team[]
-  winnerName: string
   onRestart: () => void
 }
 
-export function ResultScreen({ teams, winnerName, onRestart }: ResultScreenProps) {
+function getTopScorers(teams: Team[]) {
+  if (teams.length === 0) return []
+
+  const maxScore = Math.max(...teams.map((team) => team.score))
+  return teams.filter((team) => team.score === maxScore)
+}
+
+export function ResultScreen({ teams, onRestart }: ResultScreenProps) {
   const rankedTeams = [...teams].sort((a, b) => b.score - a.score)
+  const winners = getTopScorers(teams)
+  const winnerLabel = winners.map((team) => team.name).join(' · ')
+  const isTie = winners.length > 1
 
   return (
     <main className="start-screen">
       <section className="start-card result-card">
         <p className="eyebrow">게임 종료</p>
-        <h1>{winnerName} 우승!</h1>
-        <p className="start-description">2바퀴를 먼저 완주했습니다.</p>
+        <h1>{winnerLabel} 우승!</h1>
+        <p className="start-description">
+          {isTie ? '최종 점수 동점 1위입니다.' : '최종 점수 1위입니다.'}
+        </p>
 
         <div className="result-score-list">
           {rankedTeams.map((team, index) => (

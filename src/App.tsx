@@ -21,6 +21,12 @@ import {
 } from './data/board'
 import { getTeamMembers, pickRandomTeamMember, STAFF_MEMBERS } from './data/teamMembers'
 import type { ModalState, Team } from './types'
+import {
+  autoResolveModal,
+  getSimulationModalDelay,
+  IS_LOCAL_DEV,
+  SIMULATION_TURN_GAP_MS,
+} from './utils/gameSimulator'
 
 const TEAM_COLORS = ['#ff6b6b', '#4dabf7', '#51cf66', '#ffd43b', '#9775fa']
 const ROLL_DURATION_MS = 1000
@@ -53,18 +59,24 @@ const GOLD_KEY_FORWARD_MIN = 1
 const GOLD_KEY_FORWARD_MAX = 3
 const GOLD_KEY_BACK_MIN = 1
 const GOLD_KEY_BACK_MAX = 2
+const SIMULATION_MAX_TURNS = 5000
 
 function App() {
   const [screen, setScreen] = useState<'rules' | 'start' | 'game' | 'result'>('rules')
   const [teams, setTeams] = useState<Team[]>([])
-  const [winnerName, setWinnerName] = useState('')
   const [currentTeamIndex, setCurrentTeamIndex] = useState(0)
   const [diceValue, setDiceValue] = useState<number | null>(null)
   const [isRolling, setIsRolling] = useState(false)
   const [modal, setModal] = useState<ModalState | null>(null)
+  const [isSimulating, setIsSimulating] = useState(false)
   const teamsRef = useRef<Team[]>([])
   const currentTeamIndexRef = useRef(0)
   const chairmanMealUsedRef = useRef(false)
+  const simulatingRef = useRef(false)
+  const screenRef = useRef<'rules' | 'start' | 'game' | 'result'>('rules')
+  const modalRef = useRef<ModalState | null>(null)
+  const isRollingRef = useRef(false)
+  const simulationAbortRef = useRef(false)
 
   useEffect(() => {
     teamsRef.current = teams
@@ -73,6 +85,29 @@ function App() {
   useEffect(() => {
     currentTeamIndexRef.current = currentTeamIndex
   }, [currentTeamIndex])
+
+  useEffect(() => {
+    screenRef.current = screen
+  }, [screen])
+
+  useEffect(() => {
+    modalRef.current = modal
+  }, [modal])
+
+  useEffect(() => {
+    isRollingRef.current = isRolling
+  }, [isRolling])
+
+  useEffect(() => {
+    if (!simulatingRef.current || !modal) return
+
+    const currentTeamId = teamsRef.current[currentTeamIndexRef.current]?.id ?? 0
+    const timer = window.setTimeout(() => {
+      void autoResolveModal(modal, teamsRef.current, currentTeamId)
+    }, getSimulationModalDelay(modal))
+
+    return () => window.clearTimeout(timer)
+  }, [modal])
 
   const updateTeams = (updater: (previousTeams: Team[]) => Team[]) => {
     const nextTeams = updater(teamsRef.current)
@@ -118,13 +153,15 @@ function App() {
   }
 
   const resetGame = () => {
+    simulationAbortRef.current = true
+    simulatingRef.current = false
+    setIsSimulating(false)
     teamsRef.current = []
     setTeams([])
     setCurrentTeamIndex(0)
     setDiceValue(null)
     setIsRolling(false)
     setModal(null)
-    setWinnerName('')
     chairmanMealUsedRef.current = false
     setScreen('rules')
   }
@@ -371,10 +408,9 @@ function App() {
       )
 
       if (nextLaps >= LAP_COUNT_TO_WIN) {
-        setWinnerName(currentTeam.name)
         setModal({
           title: '게임 종료!',
-          message: `${currentTeam.name}이(가) 2바퀴를 먼저 완주했습니다!\n완주 보너스 +${LAP_SCORE}점`,
+          message: `${currentTeam.name}이(가) 2바퀴를 완주했습니다!\n완주 보너스 +${LAP_SCORE}점\n우승은 최종 점수 1위 팀입니다.`,
           accent: 'FINISH',
           onConfirm: () => {
             setModal(null)
@@ -810,9 +846,47 @@ function App() {
 
   const rollDice = async () => {
     const currentTeam = teams[currentTeamIndex]
-    if (!currentTeam || isRolling || modal) return
+    if (!currentTeam || isRolling || modal || isSimulating) return
 
     await executeDiceRoll()
+  }
+
+  const runSimulation = async () => {
+    if (!IS_LOCAL_DEV || simulatingRef.current || screen !== 'game') return
+
+    simulationAbortRef.current = false
+    simulatingRef.current = true
+    setIsSimulating(true)
+
+    try {
+      for (let turn = 0; turn < SIMULATION_MAX_TURNS; turn += 1) {
+        if (simulationAbortRef.current || screenRef.current !== 'game') break
+
+        while (modalRef.current && !simulationAbortRef.current) {
+          await delay(50)
+        }
+
+        if (screenRef.current !== 'game') break
+
+        while (isRollingRef.current && !simulationAbortRef.current) {
+          await delay(50)
+        }
+
+        if (simulationAbortRef.current || screenRef.current !== 'game') break
+
+        await executeDiceRoll()
+        await delay(SIMULATION_TURN_GAP_MS)
+      }
+    } finally {
+      simulatingRef.current = false
+      setIsSimulating(false)
+    }
+  }
+
+  const stopSimulation = () => {
+    simulationAbortRef.current = true
+    simulatingRef.current = false
+    setIsSimulating(false)
   }
 
   if (screen === 'rules') {
@@ -824,7 +898,7 @@ function App() {
   }
 
   if (screen === 'result') {
-    return <ResultScreen teams={teams} winnerName={winnerName} onRestart={resetGame} />
+    return <ResultScreen teams={teams} onRestart={resetGame} />
   }
 
   const currentTeam = teams[currentTeamIndex]
@@ -836,13 +910,34 @@ function App() {
           <p className="eyebrow">현재 턴</p>
           <h1 style={{ color: currentTeam?.color }}>{currentTeam?.name}</h1>
         </div>
+        {IS_LOCAL_DEV && (
+          <div className="dev-simulator-controls">
+            <button
+              className="secondary-button dev-simulator-button"
+              disabled={isSimulating}
+              onClick={() => void runSimulation()}
+            >
+              {isSimulating ? '시뮬레이션 중...' : '게임 시뮬레이터'}
+            </button>
+            {isSimulating && (
+              <button className="secondary-button dev-simulator-stop" onClick={stopSimulation}>
+                중지
+              </button>
+            )}
+          </div>
+        )}
       </header>
 
       <div className="game-layout">
         <Board teams={teams} showGuides={SHOW_CELL_GUIDES} />
 
         <aside className="side-panel">
-          <Dice value={diceValue} isRolling={isRolling} disabled={isRolling || Boolean(modal)} onRoll={rollDice} />
+          <Dice
+            value={diceValue}
+            isRolling={isRolling}
+            disabled={isRolling || Boolean(modal) || isSimulating}
+            onRoll={rollDice}
+          />
           <ScoreBoard teams={teams} currentTeamId={currentTeam?.id ?? 0} />
         </aside>
       </div>
