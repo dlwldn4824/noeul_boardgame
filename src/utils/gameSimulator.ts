@@ -15,8 +15,12 @@ export const SIMULATION_ROULETTE_DELAY_MS = 5500
 /** 회장님 밥 잭팟 (드럼롤 2.4초 + 룰렛 5초 + 여유) */
 export const SIMULATION_SPECTACULAR_DELAY_MS = 8200
 
+/** 숨은 과자 연출 (탐색 2.4초 + 발견 확인) */
+export const SIMULATION_SNACK_DELAY_MS = 5200
+
 export function getSimulationModalDelay(modal: ModalState): number {
   if (modal.spectacularReveal) return SIMULATION_SPECTACULAR_DELAY_MS
+  if (modal.snackDiscovery) return SIMULATION_SNACK_DELAY_MS
   if (modal.memberPick) return SIMULATION_ROULETTE_DELAY_MS
   if (modal.requiresScoreAward) return SIMULATION_MODAL_DELAY_MS + 1200
   if (modal.scoreSwap) return SIMULATION_MODAL_DELAY_MS + 600
@@ -30,6 +34,11 @@ export async function autoResolveModal(
 ): Promise<void> {
   if (modal.spectacularReveal) {
     await modal.spectacularReveal.onComplete()
+    return
+  }
+
+  if (modal.snackDiscovery) {
+    await modal.snackDiscovery.onComplete()
     return
   }
 

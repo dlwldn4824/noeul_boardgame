@@ -60,6 +60,10 @@ export interface ModalState {
     onReroll?: () => void
     onComplete: () => void | Promise<void>
   }
+  /** 숨은 과자 랜덤 발견 연출 */
+  snackDiscovery?: {
+    onComplete: () => void | Promise<void>
+  }
   /** 황금열쇠 대박 연출 (게임당 1회) */
   spectacularReveal?: {
     kind: 'chairman-meal'

@@ -60,6 +60,8 @@ const GOLD_KEY_FORWARD_MAX = 3
 const GOLD_KEY_BACK_MIN = 1
 const GOLD_KEY_BACK_MAX = 2
 const SIMULATION_MAX_TURNS = 5000
+const MAX_SNACK_DISCOVERIES = 7
+const SNACK_DISCOVERY_CHANCE = 0.12
 
 function App() {
   const [screen, setScreen] = useState<'rules' | 'start' | 'game' | 'result'>('rules')
@@ -72,6 +74,7 @@ function App() {
   const teamsRef = useRef<Team[]>([])
   const currentTeamIndexRef = useRef(0)
   const chairmanMealUsedRef = useRef(false)
+  const snackDiscoveriesRemainingRef = useRef(MAX_SNACK_DISCOVERIES)
   const simulatingRef = useRef(false)
   const screenRef = useRef<'rules' | 'start' | 'game' | 'result'>('rules')
   const modalRef = useRef<ModalState | null>(null)
@@ -149,6 +152,7 @@ function App() {
     setDiceValue(null)
     setModal(null)
     chairmanMealUsedRef.current = false
+    snackDiscoveriesRemainingRef.current = MAX_SNACK_DISCOVERIES
     setScreen('game')
   }
 
@@ -163,12 +167,43 @@ function App() {
     setIsRolling(false)
     setModal(null)
     chairmanMealUsedRef.current = false
+    snackDiscoveriesRemainingRef.current = MAX_SNACK_DISCOVERIES
     setScreen('rules')
   }
 
   const advanceTurn = () => {
     setModal(null)
     setCurrentTeamIndex((previousIndex) => (previousIndex + 1) % teamsRef.current.length)
+  }
+
+  const showSnackDiscovery = (onContinue: () => void) => {
+    setModal({
+      title: '',
+      message: '',
+      snackDiscovery: {
+        onComplete: () => {
+          setModal(null)
+          onContinue()
+        },
+      },
+      onConfirm: () => {
+        setModal(null)
+        onContinue()
+      },
+    })
+  }
+
+  const trySnackDiscovery = (onContinue: () => void) => {
+    if (
+      snackDiscoveriesRemainingRef.current <= 0 ||
+      Math.random() >= SNACK_DISCOVERY_CHANCE
+    ) {
+      onContinue()
+      return
+    }
+
+    snackDiscoveriesRemainingRef.current -= 1
+    showSnackDiscovery(onContinue)
   }
 
   const moveTeam = async (teamId: number, amount: number) => {
@@ -377,7 +412,7 @@ function App() {
     })
   }
 
-  const processArrival = (
+  const processArrivalInner = (
     teamId: number,
     position: number,
     arrivalRoll?: number,
@@ -842,6 +877,15 @@ function App() {
     }
 
     advanceTurn()
+  }
+
+  const processArrival = (
+    teamId: number,
+    position: number,
+    arrivalRoll?: number,
+    arrivedBackward = false,
+  ) => {
+    trySnackDiscovery(() => processArrivalInner(teamId, position, arrivalRoll, arrivedBackward))
   }
 
   const rollDice = async () => {

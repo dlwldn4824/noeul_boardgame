@@ -952,3 +952,274 @@ button:disabled {
     opacity: 0.2;
   }
 }
+
+.snack-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.snack-search-phase {
+  background: radial-gradient(circle at center, rgba(180, 140, 255, 0.35), rgba(35, 20, 60, 0.92));
+  animation: snack-search-pulse 0.8s ease-in-out infinite alternate;
+}
+
+.snack-found-phase {
+  background: radial-gradient(circle at center, rgba(255, 224, 130, 0.8), rgba(255, 146, 43, 0.45), rgba(40, 20, 8, 0.9));
+  animation: snack-found-flash 0.7s ease-out;
+}
+
+.snack-modal {
+  position: relative;
+  z-index: 2;
+  width: min(640px, 92vw);
+  padding: 38px 32px;
+  border-radius: 32px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.snack-search-modal {
+  background: linear-gradient(145deg, #2f2550, #4a3d7a);
+  color: #f3ecff;
+  border: 4px solid rgba(210, 180, 255, 0.55);
+  animation: snack-wobble 0.5s ease-in-out infinite alternate;
+}
+
+.snack-found-modal {
+  background: linear-gradient(145deg, #fff8e8, #ffd8a8, #ffb347);
+  color: #5c3b12;
+  border: 5px solid #ff922b;
+  animation: snack-pop 0.65s cubic-bezier(0.2, 1.2, 0.3, 1);
+}
+
+.snack-badge {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.snack-badge.found {
+  background: rgba(255, 146, 43, 0.25);
+  color: #d9480f;
+}
+
+.snack-title {
+  margin: 0 0 12px;
+  font-size: 42px;
+  font-weight: 950;
+}
+
+.snack-title.wobble {
+  animation: snack-wobble 0.45s ease-in-out infinite alternate;
+}
+
+.snack-title.found-title {
+  color: #e8590c;
+  text-shadow: 0 3px 0 rgba(255, 255, 255, 0.6);
+}
+
+.snack-message {
+  margin: 0 0 24px;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.snack-message.search-message {
+  color: #e5dbff;
+}
+
+.snack-message.found-message {
+  color: #862e00;
+}
+
+.snack-search-icons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 24px;
+  font-size: 48px;
+}
+
+.snack-question {
+  display: inline-block;
+  font-size: 64px;
+  font-weight: 950;
+  color: #ffd43b;
+  animation: snack-question-bounce 0.6s ease-in-out infinite;
+}
+
+.snack-hero-emojis {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 52px;
+}
+
+.snack-hero-main {
+  font-size: 72px;
+  animation: snack-hero-bounce 0.7s ease-in-out infinite;
+}
+
+.snack-button {
+  min-width: 180px;
+}
+
+.snack-button.found-button {
+  background: linear-gradient(135deg, #ff922b, #fd7e14);
+  border-color: #e8590c;
+}
+
+.snack-dust-layer,
+.snack-confetti-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.snack-sparkle {
+  position: absolute;
+  animation: snack-sparkle 1.4s ease-in-out infinite;
+}
+
+.snack-falling {
+  position: absolute;
+  top: -40px;
+  font-size: 34px;
+  animation: snack-fall linear infinite;
+}
+
+.snack-search-rings {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.snack-search-rings span {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border: 3px solid rgba(210, 180, 255, 0.45);
+  border-radius: 50%;
+  animation: ring-boom 1.2s ease-out infinite;
+}
+
+.snack-search-rings span:nth-child(2) {
+  animation-delay: 0.35s;
+}
+
+.snack-search-rings span:nth-child(3) {
+  animation-delay: 0.7s;
+}
+
+.snack-burst {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 212, 59, 0.55), transparent 70%);
+  animation: burst-spin 2.4s linear infinite;
+}
+
+@keyframes snack-search-pulse {
+  from {
+    filter: brightness(0.95);
+  }
+
+  to {
+    filter: brightness(1.08);
+  }
+}
+
+@keyframes snack-found-flash {
+  0% {
+    filter: brightness(1.8);
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@keyframes snack-wobble {
+  from {
+    transform: rotate(-1deg) scale(0.99);
+  }
+
+  to {
+    transform: rotate(1deg) scale(1.01);
+  }
+}
+
+@keyframes snack-pop {
+  0% {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes snack-question-bounce {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-10px) scale(1.08);
+  }
+}
+
+@keyframes snack-hero-bounce {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+
+  50% {
+    transform: translateY(-14px) rotate(4deg);
+  }
+}
+
+@keyframes snack-sparkle {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes snack-fall {
+  0% {
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(110vh) rotate(540deg);
+    opacity: 0.15;
+  }
+}

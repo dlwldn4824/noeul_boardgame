@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { pickRandomTeamMember } from '../data/teamMembers'
 import { useMemberRoulette } from '../hooks/useMemberRoulette'
+import { SnackDiscoveryModal } from './SnackDiscoveryModal'
 import { SpectacularGoldKeyModal } from './SpectacularGoldKeyModal'
 import type { ModalState, Team } from '../types'
 
@@ -57,6 +58,10 @@ export function EventModal({ modal, teams, currentTeamId }: EventModalProps) {
   }
 
   const showScoreSelector = modal.requiresScoreAward && isSelectingWinner
+
+  if (modal.snackDiscovery) {
+    return <SnackDiscoveryModal onComplete={modal.snackDiscovery.onComplete} />
+  }
 
   if (modal.spectacularReveal?.kind === 'chairman-meal') {
     return (
