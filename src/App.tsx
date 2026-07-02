@@ -190,6 +190,7 @@ function App() {
       'score-plus-20',
       'target-minus-10',
       'staff-drink',
+      'swap-scores',
     ] as const
 
     const availableEvents = chairmanMealUsedRef.current
@@ -287,6 +288,34 @@ function App() {
         title: '황금열쇠',
         message: `💯 ${currentTeam.name} 조 점수 +20점!`,
         accent: '+20',
+        onConfirm: advanceTurn,
+      })
+      return
+    }
+
+    if (goldKeyEvent === 'swap-scores') {
+      setModal({
+        title: '황금열쇠',
+        message: '🔀 점수를 바꿀 두 팀을 선택하세요!',
+        accent: '황금열쇠',
+        scoreSwap: {
+          firstLabel: '첫 번째 팀',
+          secondLabel: '두 번째 팀',
+          onConfirm: (firstTeamId, secondTeamId) => {
+            updateTeams((previousTeams) => {
+              const firstTeam = previousTeams.find((team) => team.id === firstTeamId)
+              const secondTeam = previousTeams.find((team) => team.id === secondTeamId)
+              if (!firstTeam || !secondTeam) return previousTeams
+
+              return previousTeams.map((team) => {
+                if (team.id === firstTeamId) return { ...team, score: secondTeam.score }
+                if (team.id === secondTeamId) return { ...team, score: firstTeam.score }
+                return team
+              })
+            })
+            advanceTurn()
+          },
+        },
         onConfirm: advanceTurn,
       })
       return

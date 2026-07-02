@@ -15,6 +15,8 @@ export function EventModal({ modal, teams, currentTeamId }: EventModalProps) {
   const [pickedMember, setPickedMember] = useState('')
   const [rollKey, setRollKey] = useState(0)
   const [memberPickPhase, setMemberPickPhase] = useState<'pick' | 'confirm'>('pick')
+  const [firstSwapTeamId, setFirstSwapTeamId] = useState(teams[0]?.id ?? 0)
+  const [secondSwapTeamId, setSecondSwapTeamId] = useState(teams[1]?.id ?? teams[0]?.id ?? 0)
 
   const selectableTeams = useMemo(
     () => teams.filter((team) => team.id !== currentTeamId),
@@ -35,6 +37,13 @@ export function EventModal({ modal, teams, currentTeamId }: EventModalProps) {
       setMemberPickPhase('pick')
     }
   }, [modal.memberPick])
+
+  useEffect(() => {
+    if (modal.scoreSwap) {
+      setFirstSwapTeamId(teams[0]?.id ?? 0)
+      setSecondSwapTeamId(teams[1]?.id ?? teams[0]?.id ?? 0)
+    }
+  }, [modal.scoreSwap, teams])
 
   const memberPickMembers = modal.memberPick?.members ?? []
   const { displayName, isRolling } = useMemberRoulette(
@@ -134,6 +143,37 @@ export function EventModal({ modal, teams, currentTeamId }: EventModalProps) {
         <h2>{modal.title}</h2>
         <p className="modal-message">{modal.message}</p>
 
+        {modal.scoreSwap && (
+          <>
+            <label className="target-selector">
+              {modal.scoreSwap.firstLabel ?? '첫 번째 팀'}
+              <select
+                value={firstSwapTeamId}
+                onChange={(event) => setFirstSwapTeamId(Number(event.target.value))}
+              >
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name} ({team.score}점)
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="target-selector">
+              {modal.scoreSwap.secondLabel ?? '두 번째 팀'}
+              <select
+                value={secondSwapTeamId}
+                onChange={(event) => setSecondSwapTeamId(Number(event.target.value))}
+              >
+                {teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name} ({team.score}점)
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        )}
+
         {modal.requiresTarget && (
           <label className="target-selector">
             {modal.targetLabel ?? '감점할 팀 선택'}
@@ -178,6 +218,14 @@ export function EventModal({ modal, teams, currentTeamId }: EventModalProps) {
         ) : modal.requiresScoreAward && !isSelectingWinner ? (
           <button className="primary-button" onClick={() => setIsSelectingWinner(true)}>
             점수입력하기
+          </button>
+        ) : modal.scoreSwap ? (
+          <button
+            className="primary-button"
+            disabled={firstSwapTeamId === secondSwapTeamId}
+            onClick={() => modal.scoreSwap?.onConfirm(firstSwapTeamId, secondSwapTeamId)}
+          >
+            점수 바꾸기
           </button>
         ) : (
           <button className="primary-button" onClick={handleConfirm}>

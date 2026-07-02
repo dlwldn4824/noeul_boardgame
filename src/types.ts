@@ -68,5 +68,11 @@ export interface ModalState {
     pickedMember: string
     onComplete: () => void | Promise<void>
   }
+  /** 두 팀 점수 교환 (황금열쇠) */
+  scoreSwap?: {
+    firstLabel?: string
+    secondLabel?: string
+    onConfirm: (firstTeamId: number, secondTeamId: number) => void | Promise<void>
+  }
   onConfirm: (targetTeamId?: number) => void | Promise<void>
 }
