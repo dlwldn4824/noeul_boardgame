@@ -149,6 +149,23 @@ button:disabled {
   margin-bottom: 32px;
 }
 
+.team-setup-card {
+  width: min(860px, 92vw);
+  text-align: left;
+}
+
+.team-setup-card h1,
+.team-setup-card .start-description {
+  text-align: center;
+}
+
+.team-setup-row {
+  padding: 16px 18px;
+  border: 3px solid rgba(73, 58, 44, 0.14);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
 .team-input-label {
   display: grid;
   grid-template-columns: 84px 1fr;
@@ -157,6 +174,14 @@ button:disabled {
   font-size: 22px;
   font-weight: 900;
   text-align: left;
+}
+
+.team-roster {
+  margin: 10px 0 0 96px;
+  color: #5c4b3a;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.55;
 }
 
 .team-input-label input {
